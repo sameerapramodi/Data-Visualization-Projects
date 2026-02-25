@@ -1,0 +1,10 @@
+Census of Population and Housing 2024 (CPH-2024)
+
+Source link:https://www.statistics.gov.lk/Population/StaticalInformation/CPH2024
+
+GN Level (Grama Niladhari) Population by Sex and Age group - GN_population_excel
+Occupied Housing Units by Grama Niladhari Division - GN_housing_excel
+
+Population Information by Grama Niladhari Division, CPH-2024 - GN_population_excel
+Information on Occupied Housing Units by Grama Niladhari Division, CPH-2024 - OHU_GN_excel
+Household Information by Grama Niladhari Division, CPH-2024 - HH_GND_excel
