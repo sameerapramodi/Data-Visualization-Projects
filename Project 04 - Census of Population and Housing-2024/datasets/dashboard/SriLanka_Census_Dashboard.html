@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sri Lanka Census 2024 — GN Division Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0b1120;
+    --surface: #121c2e;
+    --surface2: #1a2640;
+    --border: #1e3050;
+    --accent: #e8a542;
+    --accent2: #4fc3a1;
+    --accent3: #e05c6c;
+    --accent4: #6fa3ef;
+    --text: #e8edf5;
+    --muted: #7a90b0;
+    --gold: #f5c842;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #0b1120 0%, #0f1e38 60%, #142544 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 28px 40px 24px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 280px; height: 280px;
+    background: radial-gradient(circle, rgba(232,165,66,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-left h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    letter-spacing: -0.5px;
+    line-height: 1.1;
+    color: var(--text);
+  }
+  .header-left h1 span { color: var(--accent); }
+  .header-left p {
+    color: var(--muted);
+    font-size: 0.8rem;
+    margin-top: 6px;
+    font-weight: 300;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .dash-badge {
+    background: var(--accent);
+    color: #0b1120;
+    font-weight: 700;
+    font-size: 0.7rem;
+    padding: 4px 10px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    align-self: flex-start;
+    margin-top: 4px;
+  }
+
+  /* TABS */
+  .tabs {
+    display: flex;
+    gap: 2px;
+    background: var(--surface);
+    padding: 10px 40px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    padding: 10px 20px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 6px 6px 0 0;
+    border: 1px solid transparent;
+    border-bottom: none;
+    transition: all 0.2s;
+    letter-spacing: 0.3px;
+  }
+  .tab:hover { color: var(--text); background: var(--surface2); }
+  .tab.active {
+    color: var(--accent);
+    background: var(--bg);
+    border-color: var(--border);
+    border-bottom-color: var(--bg);
+  }
+
+  /* CONTENT */
+  .content { padding: 28px 40px; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* KPI CARDS */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .kpi {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .kpi:hover { transform: translateY(-2px); border-color: var(--accent2); }
+  .kpi::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    border-radius: 0 0 12px 12px;
+  }
+  .kpi:nth-child(1)::after { background: var(--accent); }
+  .kpi:nth-child(2)::after { background: var(--accent2); }
+  .kpi:nth-child(3)::after { background: var(--accent4); }
+  .kpi:nth-child(4)::after { background: var(--accent3); }
+  .kpi-label { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; }
+  .kpi-value { font-family: 'DM Serif Display', serif; font-size: 2rem; margin: 6px 0 4px; letter-spacing: -1px; }
+  .kpi-sub { font-size: 0.75rem; color: var(--muted); }
+
+  /* CHART GRID */
+  .chart-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  .chart-grid-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .chart-card.wide { grid-column: 1 / -1; }
+  .chart-title {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .chart-subtitle {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--text);
+    margin-bottom: 18px;
+  }
+  .chart-wrap { position: relative; }
+
+  /* TABLE */
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+  .data-table thead th {
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+  }
+  .data-table tbody tr {
+    border-bottom: 1px solid rgba(30,48,80,0.5);
+    transition: background 0.15s;
+    cursor: pointer;
+  }
+  .data-table tbody tr:hover { background: var(--surface2); }
+  .data-table tbody tr.selected { background: rgba(79,195,161,0.08); border-left: 3px solid var(--accent2); }
+  .data-table tbody td {
+    padding: 11px 14px;
+    color: var(--text);
+  }
+  .province-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  .bar-cell { display: flex; align-items: center; gap: 8px; }
+  .mini-bar { flex: 1; height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .mini-bar-fill { height: 100%; border-radius: 3px; }
+
+  /* FILTER */
+  .filter-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    align-items: center;
+  }
+  .filter-label { font-size: 0.78rem; color: var(--muted); }
+  .filter-btn {
+    padding: 6px 14px;
+    font-size: 0.78rem;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .filter-btn:hover, .filter-btn.active {
+    background: var(--accent2);
+    color: #0b1120;
+    border-color: var(--accent2);
+    font-weight: 600;
+  }
+
+  /* GENDER / AGE DETAIL */
+  .detail-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .detail-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+  }
+  .detail-card h3 { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px; }
+  .gender-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .gender-label { font-size: 0.82rem; width: 60px; }
+  .gender-bar { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .gender-bar-fill { height: 100%; border-radius: 4px; }
+  .gender-val { font-size: 0.78rem; color: var(--muted); width: 45px; text-align: right; }
+  .age-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .age-label { font-size: 0.78rem; width: 70px; }
+  .age-bar { flex: 1; height: 16px; background: var(--border); border-radius: 4px; overflow: hidden; display: flex; align-items: center; }
+  .age-bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; }
+  .age-pct { font-size: 0.68rem; font-weight: 600; color: #0b1120; }
+
+  /* INSIGHT CARDS */
+  .insight-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 20px;
+  }
+  .insight-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .insight-icon {
+    font-size: 1.4rem;
+    margin-top: 2px;
+  }
+  .insight-text h4 { font-size: 0.82rem; font-weight: 600; margin-bottom: 4px; }
+  .insight-text p { font-size: 0.75rem; color: var(--muted); line-height: 1.5; }
+
+  /* DASH SECTION */
+  .dash-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .dash-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .dash-letter {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.3rem;
+    font-weight: bold;
+    flex-shrink: 0;
+  }
+  .dash-header-text h3 { font-size: 1rem; font-weight: 600; }
+  .dash-header-text p { font-size: 0.78rem; color: var(--muted); }
+
+  .checklist { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .checklist li {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 0.82rem; line-height: 1.4;
+    padding: 10px 12px;
+    background: var(--bg);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .checklist li:hover { border-color: var(--accent2); }
+  .checklist li.done { opacity: 0.6; }
+  .checklist li.done .check-box { background: var(--accent2); border-color: var(--accent2); }
+  .checklist li.done .check-box::after { content: '✓'; color: #0b1120; font-size: 0.7rem; font-weight: bold; }
+  .check-box {
+    width: 18px; height: 18px; border-radius: 4px;
+    border: 1.5px solid var(--border);
+    flex-shrink: 0; margin-top: 1px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+  }
+  .checklist-text strong { display: block; color: var(--text); }
+  .checklist-text span { color: var(--muted); font-size: 0.75rem; }
+
+  .time-bar-wrap { margin-top: 16px; }
+  .time-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .time-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent2), var(--accent)); width: 0; border-radius: 3px; transition: width 1s ease; }
+  .time-labels { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+
+  .province-selector {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;
+  }
+  .prov-btn {
+    padding: 5px 12px; font-size: 0.75rem; border-radius: 20px;
+    border: 1.5px solid var(--border); background: var(--surface2);
+    color: var(--muted); cursor: pointer; transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .prov-btn.active { color: #0b1120; font-weight: 600; }
+
+  @media (max-width: 900px) {
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+    .chart-grid-2 { grid-template-columns: 1fr; }
+    .detail-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <h1>Sri Lanka <span>Census 2024</span></h1>
+    <p>Grama Niladhari Division · Population &amp; Housing · Provisional Data</p>
+  </div>
+  <div class="dash-badge">DASH Framework</div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('overview')">📊 Overview</div>
+  <div class="tab" onclick="switchTab('population')">👥 Population</div>
+  <div class="tab" onclick="switchTab('housing')">🏠 Housing</div>
+  <div class="tab" onclick="switchTab('dash')">⏱ DASH Checklist</div>
+</div>
+
+<!-- ===================== OVERVIEW ===================== -->
+<div class="content">
+<div id="panel-overview" class="panel active">
+
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-label">Total Population</div>
+      <div class="kpi-value" style="color:var(--accent)">21.78M</div>
+      <div class="kpi-sub">Across 9 Provinces · 25 Districts</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Occupied Housing Units</div>
+      <div class="kpi-value" style="color:var(--accent2)">6.03M</div>
+      <div class="kpi-sub">Avg. 3.61 persons per unit</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Female Population</div>
+      <div class="kpi-value" style="color:var(--accent4)">51.7%</div>
+      <div class="kpi-sub">11.27M Female · 10.51M Male</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">Working Age (15–59)</div>
+      <div class="kpi-value" style="color:var(--accent3)">61.3%</div>
+      <div class="kpi-sub">13.35M persons</div>
+    </div>
+  </div>
+
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <div class="chart-title">By Province</div>
+      <div class="chart-subtitle">Population Distribution</div>
+      <div class="chart-wrap" style="height:280px"><canvas id="chart-prov-pop"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">National</div>
+      <div class="chart-subtitle">Age Group Breakdown</div>
+      <div class="chart-wrap" style="height:280px"><canvas id="chart-age-donut"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card" style="margin-bottom:20px">
+    <div class="chart-title">Province Comparison</div>
+    <div class="chart-subtitle">Population vs Occupied Housing Units</div>
+    <div class="chart-wrap" style="height:200px"><canvas id="chart-compare"></canvas></div>
+  </div>
+
+  <div class="insight-grid">
+    <div class="insight-card">
+      <div class="insight-icon">🏆</div>
+      <div class="insight-text">
+        <h4>Most Populated — Western</h4>
+        <p>6.12M residents (28.1% of national total). Home to Colombo, Gampaha &amp; Kalutara districts.</p>
+      </div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-icon">👶</div>
+      <div class="insight-text">
+        <h4>Youngest Province — Eastern</h4>
+        <p>25.3% of its population is aged 0–14, the highest share of children nationally.</p>
+      </div>
+    </div>
+    <div class="insight-card">
+      <div class="insight-icon">🏠</div>
+      <div class="insight-text">
+        <h4>Largest Households — Northern</h4>
+        <p>Average of 3.74 persons per housing unit, with Mannar district at 3.87 — highest nationally.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===================== POPULATION ===================== -->
+<div id="panel-population" class="panel">
+
+  <div class="filter-row">
+    <span class="filter-label">View:</span>
+    <button class="filter-btn active" onclick="setPopView(this,'province')">By Province</button>
+    <button class="filter-btn" onclick="setPopView(this,'district')">By District</button>
+  </div>
+
+  <div class="chart-grid-2" style="margin-bottom:20px">
+    <div class="chart-card">
+      <div class="chart-title">Gender Split</div>
+      <div class="chart-subtitle">Male vs Female by Province</div>
+      <div class="chart-wrap" style="height:280px"><canvas id="chart-gender-bar"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Age Structure</div>
+      <div class="chart-subtitle">Age Pyramid by Province</div>
+      <div class="chart-wrap" style="height:280px"><canvas id="chart-age-stacked"></canvas></div>
+    </div>
+  </div>
+
+  <div class="detail-grid">
+    <div class="detail-card">
+      <h3>National Gender Split</h3>
+      <div class="gender-row">
+        <span class="gender-label">Female</span>
+        <div class="gender-bar"><div class="gender-bar-fill" style="width:51.7%;background:var(--accent3)"></div></div>
+        <span class="gender-val">51.7%</span>
+      </div>
+      <div class="gender-row">
+        <span class="gender-label">Male</span>
+        <div class="gender-bar"><div class="gender-bar-fill" style="width:48.3%;background:var(--accent4)"></div></div>
+        <span class="gender-val">48.3%</span>
+      </div>
+    </div>
+    <div class="detail-card">
+      <h3>Age Group Distribution</h3>
+      <div class="age-row">
+        <span class="age-label">0–14 yrs</span>
+        <div class="age-bar"><div class="age-bar-fill" style="width:20.7%;background:var(--accent2)"><span class="age-pct">20.7%</span></div></div>
+      </div>
+      <div class="age-row">
+        <span class="age-label">15–59 yrs</span>
+        <div class="age-bar"><div class="age-bar-fill" style="width:61.3%;background:var(--accent)"><span class="age-pct">61.3%</span></div></div>
+      </div>
+      <div class="age-row">
+        <span class="age-label">60–64 yrs</span>
+        <div class="age-bar"><div class="age-bar-fill" style="width:5.4%;background:var(--accent4)"><span class="age-pct" style="color:#fff">5.4%</span></div></div>
+      </div>
+      <div class="age-row">
+        <span class="age-label">65+ yrs</span>
+        <div class="age-bar"><div class="age-bar-fill" style="width:12.6%;background:var(--accent3)"><span class="age-pct">12.6%</span></div></div>
+      </div>
+    </div>
+    <div class="detail-card">
+      <h3>Key Metrics</h3>
+      <div style="display:grid;gap:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:0.8rem;color:var(--muted)">Elderly (60+) share</span>
+          <span style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--accent3)">18.0%</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:0.8rem;color:var(--muted)">Dependency ratio</span>
+          <span style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--accent)">63.1%</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:0.8rem;color:var(--muted)">Total GN Divisions</span>
+          <span style="font-family:'DM Serif Display',serif;font-size:1.1rem;color:var(--accent2)">14,008</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Province detail table -->
+  <div class="chart-card">
+    <div class="chart-title">Full Data</div>
+    <div class="chart-subtitle">Province-Level Population Summary</div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Province</th>
+          <th>Population</th>
+          <th>Male</th>
+          <th>Female</th>
+          <th>0–14</th>
+          <th>15–59</th>
+          <th>60+</th>
+        </tr>
+      </thead>
+      <tbody id="pop-table-body"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ===================== HOUSING ===================== -->
+<div id="panel-housing" class="panel">
+
+  <div class="chart-grid-2">
+    <div class="chart-card">
+      <div class="chart-title">By Province</div>
+      <div class="chart-subtitle">Occupied Housing Units</div>
+      <div class="chart-wrap" style="height:280px"><canvas id="chart-housing-bar"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Household Size</div>
+      <div class="chart-subtitle">Avg Persons per Housing Unit</div>
+      <div class="chart-wrap" style="height:280px"><canvas id="chart-hh-size"></canvas></div>
+    </div>
+  </div>
+
+  <div class="chart-card" style="margin-bottom:20px">
+    <div class="chart-title">Full Data</div>
+    <div class="chart-subtitle">District-Level Housing Summary</div>
+    <div class="province-selector" id="dist-filter"></div>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Province</th>
+          <th>District</th>
+          <th>Population</th>
+          <th>Housing Units</th>
+          <th>Avg HH Size</th>
+          <th>Density</th>
+        </tr>
+      </thead>
+      <tbody id="housing-table-body"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<!-- ===================== DASH ===================== -->
+<div id="panel-dash" class="panel">
+
+  <div style="margin-bottom:16px;padding:16px 20px;background:var(--surface);border:1px solid var(--border);border-radius:12px;display:flex;gap:12px;align-items:center">
+    <span style="font-size:1.4rem">⏱</span>
+    <div>
+      <div style="font-size:0.9rem;font-weight:600">DASH Analysis Framework</div>
+      <div style="font-size:0.78rem;color:var(--muted)">Use this checklist to structure your 60-minute dashboard session. Click items to mark them complete.</div>
+    </div>
+    <div style="margin-left:auto;text-align:right">
+      <div id="dash-progress-text" style="font-family:'DM Serif Display',serif;font-size:1.5rem;color:var(--accent)">0/16</div>
+      <div style="font-size:0.72rem;color:var(--muted)">tasks complete</div>
+    </div>
+  </div>
+
+  <!-- D -->
+  <div class="dash-section">
+    <div class="dash-header">
+      <div class="dash-letter" style="background:rgba(232,165,66,0.15);color:var(--accent)">D</div>
+      <div class="dash-header-text">
+        <h3>Define Your Goals <span style="color:var(--muted);font-weight:400;font-size:0.85rem">— Minutes 0–10</span></h3>
+        <p>Clarify the question you're answering and who the audience is</p>
+      </div>
+    </div>
+    <ul class="checklist" id="dash-d">
+      <li onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="checklist-text"><strong>Set the primary question</strong><span>e.g. Where is population density highest? Which districts need more housing?</span></div>
+      </li>
+      <li onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="checklist-text"><strong>Identify your audience</strong><span>Policymakers, urban planners, researchers, or public?</span></div>
+      </li>
+      <li onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="checklist-text"><strong>Choose geographic scope</strong><span>National overview, province deep-dive, or district comparison?</span></div>
+      </li>
+      <li onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="checklist-text"><strong>Select key metrics</strong><span>Pop total, gender split, age groups, housing density, household size</span></div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- A -->
+  <div class="dash-section">
+    <div class="dash-header">
+      <div class="dash-letter" style="background:rgba(79,195,161,0.15);color:var(--accent2)">A</div>
+      <div class="dash-header-text">
+        <h3>Assemble Your Data <span style="color:var(--muted);font-weight:400;font-size:0.85rem">— Minutes 10–25</span></h3>
+        <p>Validate, join, and prepare the datasets for analysis</p>
+      </div>
+    </div>
+    <ul class="checklist" id="dash-a">
+      <li onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="checklist-text"><strong>Verify data completeness</strong><span>Check 14,008 GN Divisions are present in both datasets</span></div>
+      </li>
+      <li onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="checklist-text"><strong>Join datasets on GN Division Code</strong><span>Merge GN_housing + GN_population on shared GN_Division_Code key</span></div>
+      </li>
+      <li onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="checklist-text"><strong>Handle nulls &amp; outliers</strong><span>Identify GN Divisions with zero population or zero housing units</span></div>
+      </li>
+      <li onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="checklist-text"><strong>Create derived metrics</strong><span>Avg household size, % elderly, dependency ratio, pop per district</span></div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- S -->
+  <div class="dash-section">
+    <div class="dash-header">
+      <div class="dash-letter" style="background:rgba(111,163,239,0.15);color:var(--accent4)">S</div>
+      <div class="dash-header-text">
+        <h3>Sketch the Layout <span style="color:var(--muted);font-weight:400;font-size:0.85rem">— Minutes 25–45</span></h3>
+        <p>Design the visual structure and choose chart types</p>
+      </div>
+    </div>
+    <ul class="checklist" id="dash-s">
+      <li onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="checklist-text"><strong>Place KPI cards at top</strong><span>Total pop, housing units, avg HH size, gender ratio — for immediate context</span></div>
+      </li>
+      <li onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="checklist-text"><strong>Add province-level bar chart</strong><span>Horizontal bars for population or housing units — easy rank comparison</span></div>
+      </li>
+      <li onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="checklist-text"><strong>Include age/gender breakdown</strong><span>Stacked bar or population pyramid by province or district</span></div>
+      </li>
+      <li onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="checklist-text"><strong>Add a map if possible</strong><span>Choropleth of population density or household size across provinces</span></div>
+      </li>
+    </ul>
+  </div>
+
+  <!-- H -->
+  <div class="dash-section">
+    <div class="dash-header">
+      <div class="dash-letter" style="background:rgba(224,92,108,0.15);color:var(--accent3)">H</div>
+      <div class="dash-header-text">
+        <h3>Highlight Insights <span style="color:var(--muted);font-weight:400;font-size:0.85rem">— Minutes 45–60</span></h3>
+        <p>Surface the most important findings and add annotations</p>
+      </div>
+    </div>
+    <ul class="checklist" id="dash-h">
+      <li onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="checklist-text"><strong>Flag Western Province dominance</strong><span>28.1% of national population in a single province — worth calling out</span></div>
+      </li>
+      <li onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="checklist-text"><strong>Highlight aging pattern</strong><span>18% elderly nationally; Sabaragamuwa &amp; Southern highest at 19.6%</span></div>
+      </li>
+      <li onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="checklist-text"><strong>Note Eastern Province youth bulge</strong><span>25.3% aged 0–14 — implications for future schooling &amp; housing demand</span></div>
+      </li>
+      <li onclick="toggleCheck(this)">
+        <div class="check-box"></div>
+        <div class="checklist-text"><strong>Add summary annotation panel</strong><span>A 3-bullet "So What?" section for non-technical stakeholders</span></div>
+      </li>
+    </ul>
+  </div>
+
+  <div id="dash-complete-msg" style="display:none;margin-top:16px;padding:18px 20px;background:rgba(79,195,161,0.1);border:1px solid var(--accent2);border-radius:12px;text-align:center">
+    <div style="font-size:1.6rem;margin-bottom:6px">🎉</div>
+    <div style="font-weight:600;color:var(--accent2)">Dashboard analysis complete!</div>
+    <div style="font-size:0.8rem;color:var(--muted);margin-top:4px">All DASH steps checked. Your 60-minute session is structured.</div>
+  </div>
+
+</div>
+</div><!-- /content -->
+
+<script>
+// ============ DATA ============
+const provinces = [{"Province_Name":"Central","Pop_Total":2714045,"Pop_Male":1298405,"Pop_Female":1415640,"Age_0_14":593854,"Age_15_59":1609012,"Age_60_64":155726,"Age_65plus":355453,"Occupied_Housing_Units":730925,"Avg_Household_Size":3.71,"Pct_Young":21.9,"Pct_Working":59.3,"Pct_Elderly":18.8,"Pct_Male":47.8,"Pct_Female":52.2},{"Province_Name":"Eastern","Pop_Total":1783214,"Pop_Male":850607,"Pop_Female":932607,"Age_0_14":451962,"Age_15_59":1106895,"Age_60_64":79012,"Age_65plus":145345,"Occupied_Housing_Units":489362,"Avg_Household_Size":3.64,"Pct_Young":25.3,"Pct_Working":62.1,"Pct_Elderly":12.6,"Pct_Male":47.7,"Pct_Female":52.3},{"Province_Name":"North Central","Pop_Total":1407610,"Pop_Male":686257,"Pop_Female":721353,"Age_0_14":321520,"Age_15_59":867136,"Age_60_64":72924,"Age_65plus":146030,"Occupied_Housing_Units":397890,"Avg_Household_Size":3.54,"Pct_Young":22.8,"Pct_Working":61.6,"Pct_Elderly":15.6,"Pct_Male":48.8,"Pct_Female":51.2},{"Province_Name":"North Western","Pop_Total":2586972,"Pop_Male":1243316,"Pop_Female":1343656,"Age_0_14":550822,"Age_15_59":1562231,"Age_60_64":144739,"Age_65plus":329180,"Occupied_Housing_Units":738403,"Avg_Household_Size":3.5,"Pct_Young":21.3,"Pct_Working":60.4,"Pct_Elderly":18.3,"Pct_Male":48.1,"Pct_Female":51.9},{"Province_Name":"Northern","Pop_Total":1150148,"Pop_Male":551273,"Pop_Female":598875,"Age_0_14":243768,"Age_15_59":715128,"Age_60_64":54236,"Age_65plus":137016,"Occupied_Housing_Units":307459,"Avg_Household_Size":3.74,"Pct_Young":21.2,"Pct_Working":62.2,"Pct_Elderly":16.6,"Pct_Male":47.9,"Pct_Female":52.1},{"Province_Name":"Sabaragamuwa","Pop_Total":2015899,"Pop_Male":978537,"Pop_Female":1037362,"Age_0_14":404155,"Age_15_59":1216393,"Age_60_64":113179,"Age_65plus":282172,"Occupied_Housing_Units":566880,"Avg_Household_Size":3.56,"Pct_Young":20.0,"Pct_Working":60.3,"Pct_Elderly":19.6,"Pct_Male":48.5,"Pct_Female":51.5},{"Province_Name":"Southern","Pop_Total":2606679,"Pop_Male":1258830,"Pop_Female":1347849,"Age_0_14":543037,"Age_15_59":1553431,"Age_60_64":143734,"Age_65plus":366477,"Occupied_Housing_Units":722971,"Avg_Household_Size":3.61,"Pct_Young":20.8,"Pct_Working":59.6,"Pct_Elderly":19.6,"Pct_Male":48.3,"Pct_Female":51.7},{"Province_Name":"Uva","Pop_Total":1399892,"Pop_Male":683745,"Pop_Female":716147,"Age_0_14":312262,"Age_15_59":853238,"Age_60_64":76369,"Age_65plus":158023,"Occupied_Housing_Units":390145,"Avg_Household_Size":3.59,"Pct_Young":22.3,"Pct_Working":61.0,"Pct_Elderly":16.7,"Pct_Male":48.8,"Pct_Female":51.2},{"Province_Name":"Western","Pop_Total":6117341,"Pop_Male":2961374,"Pop_Female":3155967,"Age_0_14":1085459,"Age_15_59":3870373,"Age_60_64":343391,"Age_65plus":818118,"Occupied_Housing_Units":1686506,"Avg_Household_Size":3.63,"Pct_Young":17.7,"Pct_Working":63.3,"Pct_Elderly":19.0,"Pct_Male":48.4,"Pct_Female":51.6}];
+
+const districts = [{"Province_Name":"Central","District_Name":"Kandy","Pop_Total":1461895,"Pop_Male":696713,"Pop_Female":765182,"Age_0_14":308798,"Age_15_59":867789,"Age_60_64":84563,"Age_65plus":200745,"Occupied_Housing_Units":389826,"Avg_Household_Size":3.75},{"Province_Name":"Central","District_Name":"Matale","Pop_Total":526870,"Pop_Male":255221,"Pop_Female":271649,"Age_0_14":115358,"Age_15_59":313310,"Age_60_64":30691,"Age_65plus":67511,"Occupied_Housing_Units":148184,"Avg_Household_Size":3.56},{"Province_Name":"Central","District_Name":"Nuwara Eliya","Pop_Total":725280,"Pop_Male":346471,"Pop_Female":378809,"Age_0_14":169698,"Age_15_59":427913,"Age_60_64":40472,"Age_65plus":87197,"Occupied_Housing_Units":192915,"Avg_Household_Size":3.76},{"Province_Name":"Eastern","District_Name":"Ampara","Pop_Total":744551,"Pop_Male":354018,"Pop_Female":390533,"Age_0_14":189975,"Age_15_59":455929,"Age_60_64":35039,"Age_65plus":63608,"Occupied_Housing_Units":202861,"Avg_Household_Size":3.67},{"Province_Name":"Eastern","District_Name":"Batticaloa","Pop_Total":595918,"Pop_Male":278885,"Pop_Female":317033,"Age_0_14":146399,"Age_15_59":374671,"Age_60_64":26073,"Age_65plus":48775,"Occupied_Housing_Units":167150,"Avg_Household_Size":3.57},{"Province_Name":"Eastern","District_Name":"Trincomalee","Pop_Total":442745,"Pop_Male":217704,"Pop_Female":225041,"Age_0_14":115588,"Age_15_59":276295,"Age_60_64":17900,"Age_65plus":32962,"Occupied_Housing_Units":119351,"Avg_Household_Size":3.71},{"Province_Name":"North Central","District_Name":"Anuradhapura","Pop_Total":960080,"Pop_Male":466571,"Pop_Female":493509,"Age_0_14":220236,"Age_15_59":593398,"Age_60_64":48927,"Age_65plus":97519,"Occupied_Housing_Units":271408,"Avg_Household_Size":3.54},{"Province_Name":"North Central","District_Name":"Polonnaruwa","Pop_Total":447530,"Pop_Male":219686,"Pop_Female":227844,"Age_0_14":101284,"Age_15_59":273738,"Age_60_64":23997,"Age_65plus":48511,"Occupied_Housing_Units":126482,"Avg_Household_Size":3.54},{"Province_Name":"North Western","District_Name":"Kurunegala","Pop_Total":1768156,"Pop_Male":849072,"Pop_Female":919084,"Age_0_14":364836,"Age_15_59":1057426,"Age_60_64":104280,"Age_65plus":241614,"Occupied_Housing_Units":506909,"Avg_Household_Size":3.49},{"Province_Name":"North Western","District_Name":"Puttalam","Pop_Total":818816,"Pop_Male":394244,"Pop_Female":424572,"Age_0_14":185986,"Age_15_59":504805,"Age_60_64":40459,"Age_65plus":87566,"Occupied_Housing_Units":231494,"Avg_Household_Size":3.54},{"Province_Name":"Northern","District_Name":"Jaffna","Pop_Total":594751,"Pop_Male":281553,"Pop_Female":313198,"Age_0_14":116651,"Age_15_59":361288,"Age_60_64":30732,"Age_65plus":86080,"Occupied_Housing_Units":156797,"Avg_Household_Size":3.79},{"Province_Name":"Northern","District_Name":"Kilinochchi","Pop_Total":136710,"Pop_Male":66124,"Pop_Female":70586,"Age_0_14":30282,"Age_15_59":88451,"Age_60_64":5157,"Age_65plus":12820,"Occupied_Housing_Units":36484,"Avg_Household_Size":3.75},{"Province_Name":"Northern","District_Name":"Mannar","Pop_Total":123756,"Pop_Male":61047,"Pop_Female":62709,"Age_0_14":30225,"Age_15_59":77779,"Age_60_64":5377,"Age_65plus":10375,"Occupied_Housing_Units":32005,"Avg_Household_Size":3.87},{"Province_Name":"Northern","District_Name":"Mullaitivu","Pop_Total":122619,"Pop_Male":59718,"Pop_Female":62901,"Age_0_14":27892,"Age_15_59":78298,"Age_60_64":4879,"Age_65plus":11550,"Occupied_Housing_Units":34348,"Avg_Household_Size":3.57},{"Province_Name":"Northern","District_Name":"Vavuniya","Pop_Total":172312,"Pop_Male":82831,"Pop_Female":89481,"Age_0_14":38718,"Age_15_59":109312,"Age_60_64":8091,"Age_65plus":16191,"Occupied_Housing_Units":47825,"Avg_Household_Size":3.6},{"Province_Name":"Sabaragamuwa","District_Name":"Kegalle","Pop_Total":870476,"Pop_Male":416078,"Pop_Female":454398,"Age_0_14":171285,"Age_15_59":515832,"Age_60_64":51878,"Age_65plus":131481,"Occupied_Housing_Units":242027,"Avg_Household_Size":3.6},{"Province_Name":"Sabaragamuwa","District_Name":"Ratnapura","Pop_Total":1145423,"Pop_Male":562459,"Pop_Female":582964,"Age_0_14":232870,"Age_15_59":700561,"Age_60_64":61301,"Age_65plus":150691,"Occupied_Housing_Units":324853,"Avg_Household_Size":3.53},{"Province_Name":"Southern","District_Name":"Galle","Pop_Total":1097372,"Pop_Male":527640,"Pop_Female":569732,"Age_0_14":218808,"Age_15_59":660484,"Age_60_64":61158,"Age_65plus":156922,"Occupied_Housing_Units":305379,"Avg_Household_Size":3.59},{"Province_Name":"Southern","District_Name":"Hambantota","Pop_Total":671418,"Pop_Male":329210,"Pop_Female":342208,"Age_0_14":150952,"Age_15_59":399401,"Age_60_64":35642,"Age_65plus":85423,"Occupied_Housing_Units":187558,"Avg_Household_Size":3.58},{"Province_Name":"Southern","District_Name":"Matara","Pop_Total":837889,"Pop_Male":401980,"Pop_Female":435909,"Age_0_14":173277,"Age_15_59":493546,"Age_60_64":46934,"Age_65plus":124132,"Occupied_Housing_Units":230034,"Avg_Household_Size":3.64},{"Province_Name":"Uva","District_Name":"Badulla","Pop_Total":872307,"Pop_Male":422818,"Pop_Female":449489,"Age_0_14":188030,"Age_15_59":529454,"Age_60_64":50044,"Age_65plus":104779,"Occupied_Housing_Units":239417,"Avg_Household_Size":3.64},{"Province_Name":"Uva","District_Name":"Moneragala","Pop_Total":527585,"Pop_Male":260927,"Pop_Female":266658,"Age_0_14":124232,"Age_15_59":323784,"Age_60_64":26325,"Age_65plus":53244,"Occupied_Housing_Units":150728,"Avg_Household_Size":3.5},{"Province_Name":"Western","District_Name":"Colombo","Pop_Total":2375415,"Pop_Male":1154799,"Pop_Female":1220616,"Age_0_14":392725,"Age_15_59":1525336,"Age_60_64":136267,"Age_65plus":321087,"Occupied_Housing_Units":654051,"Avg_Household_Size":3.63},{"Province_Name":"Western","District_Name":"Gampaha","Pop_Total":2436142,"Pop_Male":1175469,"Pop_Female":1260673,"Age_0_14":438627,"Age_15_59":1538235,"Age_60_64":137057,"Age_65plus":322223,"Occupied_Housing_Units":683025,"Avg_Household_Size":3.57},{"Province_Name":"Western","District_Name":"Kalutara","Pop_Total":1305784,"Pop_Male":631106,"Pop_Female":674678,"Age_0_14":254107,"Age_15_59":806802,"Age_60_64":70067,"Age_65plus":174808,"Occupied_Housing_Units":349430,"Avg_Household_Size":3.74}];
+
+const COLORS = ['#e8a542','#4fc3a1','#6fa3ef','#e05c6c','#a78bfa','#f97316','#22d3ee','#84cc16','#f472b6'];
+const provColors = {};
+provinces.forEach((p,i) => provColors[p.Province_Name] = COLORS[i]);
+
+const fmt = n => n >= 1e6 ? (n/1e6).toFixed(2)+'M' : n >= 1e3 ? (n/1e3).toFixed(0)+'K' : n;
+const fmtN = n => n.toLocaleString();
+
+const chartDefaults = {
+  plugins: { legend: { labels: { color: '#7a90b0', font: { family: 'DM Sans', size: 11 }, boxWidth: 12 } } },
+  scales: {
+    x: { ticks: { color: '#7a90b0', font: { size: 10 } }, grid: { color: 'rgba(30,48,80,0.5)' } },
+    y: { ticks: { color: '#7a90b0', font: { size: 10 } }, grid: { color: 'rgba(30,48,80,0.5)' } }
+  }
+};
+
+// ============ CHARTS ============
+window.addEventListener('DOMContentLoaded', () => {
+  buildOverviewCharts();
+  buildPopCharts();
+  buildHousingCharts();
+  buildTables();
+  buildDistrictFilter();
+});
+
+function buildOverviewCharts() {
+  // Province population bar
+  new Chart(document.getElementById('chart-prov-pop'), {
+    type: 'bar',
+    data: {
+      labels: provinces.map(p => p.Province_Name),
+      datasets: [{
+        label: 'Population',
+        data: provinces.map(p => p.Pop_Total),
+        backgroundColor: provinces.map((p,i) => COLORS[i]+'cc'),
+        borderColor: provinces.map((p,i) => COLORS[i]),
+        borderWidth: 1, borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: {
+        callbacks: { label: ctx => ' ' + fmtN(ctx.raw) }
+      }},
+      scales: {
+        x: { ticks: { color: '#7a90b0', font: { size: 9 } }, grid: { color: 'rgba(30,48,80,0.4)' } },
+        y: { ticks: { color: '#7a90b0', font: { size: 9 }, callback: v => fmt(v) }, grid: { color: 'rgba(30,48,80,0.4)' } }
+      }
+    }
+  });
+
+  // Age donut
+  const total = 21781800;
+  new Chart(document.getElementById('chart-age-donut'), {
+    type: 'doughnut',
+    data: {
+      labels: ['0–14 (Youth)', '15–59 (Working)', '60–64 (Pre-elderly)', '65+ (Elderly)'],
+      datasets: [{
+        data: [4506839, 13353837, 1183310, 2737814],
+        backgroundColor: ['#4fc3a1cc','#e8a542cc','#6fa3efcc','#e05c6ccc'],
+        borderColor: ['#4fc3a1','#e8a542','#6fa3ef','#e05c6c'],
+        borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: { position: 'bottom', labels: { color: '#7a90b0', font: { size: 10 }, padding: 14, boxWidth: 10 } },
+        tooltip: { callbacks: { label: ctx => ' ' + ctx.label + ': ' + (ctx.raw/total*100).toFixed(1) + '%' } }
+      }
+    }
+  });
+
+  // Compare chart
+  new Chart(document.getElementById('chart-compare'), {
+    type: 'bar',
+    data: {
+      labels: provinces.map(p => p.Province_Name),
+      datasets: [
+        { label: 'Population', data: provinces.map(p => p.Pop_Total), backgroundColor: '#e8a54288', borderColor: '#e8a542', borderWidth: 1, borderRadius: 3, yAxisID: 'y' },
+        { label: 'Housing Units', data: provinces.map(p => p.Occupied_Housing_Units), backgroundColor: '#4fc3a188', borderColor: '#4fc3a1', borderWidth: 1, borderRadius: 3, yAxisID: 'y1' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#7a90b0', font: { size: 10 }, boxWidth: 10 } }, tooltip: { callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + fmtN(ctx.raw) } } },
+      scales: {
+        x: { ticks: { color: '#7a90b0', font: { size: 9 } }, grid: { color: 'rgba(30,48,80,0.4)' } },
+        y: { position: 'left', ticks: { color: '#e8a542', font: { size: 9 }, callback: v => fmt(v) }, grid: { color: 'rgba(30,48,80,0.3)' } },
+        y1: { position: 'right', ticks: { color: '#4fc3a1', font: { size: 9 }, callback: v => fmt(v) }, grid: { drawOnChartArea: false } }
+      }
+    }
+  });
+}
+
+function buildPopCharts() {
+  // Gender bar
+  new Chart(document.getElementById('chart-gender-bar'), {
+    type: 'bar',
+    data: {
+      labels: provinces.map(p => p.Province_Name),
+      datasets: [
+        { label: 'Male', data: provinces.map(p => p.Pop_Male), backgroundColor: '#6fa3efaa', borderColor: '#6fa3ef', borderWidth: 1, borderRadius: 3 },
+        { label: 'Female', data: provinces.map(p => p.Pop_Female), backgroundColor: '#e05c6caa', borderColor: '#e05c6c', borderWidth: 1, borderRadius: 3 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#7a90b0', font: { size: 10 }, boxWidth: 10 } } },
+      scales: {
+        x: { ticks: { color: '#7a90b0', font: { size: 9 } }, grid: { color: 'rgba(30,48,80,0.4)' } },
+        y: { ticks: { color: '#7a90b0', font: { size: 9 }, callback: v => fmt(v) }, grid: { color: 'rgba(30,48,80,0.4)' } }
+      }
+    }
+  });
+
+  // Age stacked
+  new Chart(document.getElementById('chart-age-stacked'), {
+    type: 'bar',
+    data: {
+      labels: provinces.map(p => p.Province_Name),
+      datasets: [
+        { label: '0–14', data: provinces.map(p => p.Pct_Young), backgroundColor: '#4fc3a1aa', borderWidth: 0 },
+        { label: '15–59', data: provinces.map(p => p.Pct_Working), backgroundColor: '#e8a542aa', borderWidth: 0 },
+        { label: '60+', data: provinces.map(p => p.Pct_Elderly), backgroundColor: '#e05c6caa', borderWidth: 0 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { labels: { color: '#7a90b0', font: { size: 10 }, boxWidth: 10 } } },
+      scales: {
+        x: { stacked: true, ticks: { color: '#7a90b0', font: { size: 9 } }, grid: { color: 'rgba(30,48,80,0.4)' } },
+        y: { stacked: true, ticks: { color: '#7a90b0', font: { size: 9 }, callback: v => v + '%' }, grid: { color: 'rgba(30,48,80,0.4)' }, max: 100 }
+      }
+    }
+  });
+}
+
+function buildHousingCharts() {
+  new Chart(document.getElementById('chart-housing-bar'), {
+    type: 'bar',
+    data: {
+      labels: provinces.map(p => p.Province_Name),
+      datasets: [{
+        label: 'Occupied Housing Units',
+        data: provinces.map(p => p.Occupied_Housing_Units),
+        backgroundColor: provinces.map((p,i) => COLORS[i]+'aa'),
+        borderColor: provinces.map((p,i) => COLORS[i]),
+        borderWidth: 1, borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' ' + fmtN(ctx.raw) } } },
+      scales: {
+        x: { ticks: { color: '#7a90b0', font: { size: 9 } }, grid: { color: 'rgba(30,48,80,0.4)' } },
+        y: { ticks: { color: '#7a90b0', font: { size: 9 }, callback: v => fmt(v) }, grid: { color: 'rgba(30,48,80,0.4)' } }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('chart-hh-size'), {
+    type: 'bar',
+    data: {
+      labels: provinces.map(p => p.Province_Name),
+      datasets: [{
+        label: 'Avg Persons per Unit',
+        data: provinces.map(p => p.Avg_Household_Size),
+        backgroundColor: '#a78bfaaa',
+        borderColor: '#a78bfa',
+        borderWidth: 1, borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#7a90b0', font: { size: 9 } }, grid: { color: 'rgba(30,48,80,0.4)' } },
+        y: { min: 3.0, ticks: { color: '#7a90b0', font: { size: 9 } }, grid: { color: 'rgba(30,48,80,0.4)' } }
+      }
+    }
+  });
+}
+
+function buildTables() {
+  // Population table
+  const popBody = document.getElementById('pop-table-body');
+  provinces.forEach((p, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="province-dot" style="background:${COLORS[i]}"></span>${p.Province_Name}</td>
+      <td>${fmtN(p.Pop_Total)}</td>
+      <td>${fmtN(p.Pop_Male)} <span style="color:var(--muted);font-size:0.72rem">(${p.Pct_Male}%)</span></td>
+      <td>${fmtN(p.Pop_Female)} <span style="color:var(--muted);font-size:0.72rem">(${p.Pct_Female}%)</span></td>
+      <td>${fmtN(p.Age_0_14)} <span style="color:var(--accent2);font-size:0.72rem">${p.Pct_Young}%</span></td>
+      <td>${fmtN(p.Age_15_59)} <span style="color:var(--accent);font-size:0.72rem">${p.Pct_Working}%</span></td>
+      <td>${fmtN(p.Age_60_64+p.Age_65plus)} <span style="color:var(--accent3);font-size:0.72rem">${p.Pct_Elderly}%</span></td>`;
+    popBody.appendChild(tr);
+  });
+
+  renderHousingTable('All');
+}
+
+let currentDistFilter = 'All';
+function buildDistrictFilter() {
+  const container = document.getElementById('dist-filter');
+  const allBtn = document.createElement('button');
+  allBtn.className = 'prov-btn active';
+  allBtn.textContent = 'All';
+  allBtn.style.background = '#4fc3a1'; allBtn.style.color = '#0b1120'; allBtn.style.borderColor = '#4fc3a1';
+  allBtn.onclick = () => { currentDistFilter = 'All'; setActiveDistBtn(allBtn); renderHousingTable('All'); };
+  container.appendChild(allBtn);
+
+  provinces.forEach((p, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'prov-btn';
+    btn.textContent = p.Province_Name;
+    btn.onclick = () => { currentDistFilter = p.Province_Name; setActiveDistBtn(btn, COLORS[i]); renderHousingTable(p.Province_Name); };
+    container.appendChild(btn);
+  });
+}
+
+function setActiveDistBtn(el, color) {
+  document.querySelectorAll('#dist-filter .prov-btn').forEach(b => {
+    b.classList.remove('active');
+    b.style.background = ''; b.style.color = ''; b.style.borderColor = '';
+  });
+  el.classList.add('active');
+  el.style.background = color || '#4fc3a1';
+  el.style.color = '#0b1120';
+  el.style.borderColor = color || '#4fc3a1';
+}
+
+function renderHousingTable(filter) {
+  const tbody = document.getElementById('housing-table-body');
+  tbody.innerHTML = '';
+  const data = filter === 'All' ? districts : districts.filter(d => d.Province_Name === filter);
+  const maxPop = Math.max(...data.map(d => d.Pop_Total));
+  data.forEach(d => {
+    const pi = provinces.findIndex(p => p.Province_Name === d.Province_Name);
+    const color = COLORS[pi] || '#888';
+    const pct = (d.Pop_Total / d.Occupied_Housing_Units).toFixed(2);
+    const bar = Math.round(d.Pop_Total / maxPop * 100);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="province-dot" style="background:${color}"></span>${d.Province_Name}</td>
+      <td>${d.District_Name}</td>
+      <td>
+        <div class="bar-cell">
+          <div class="mini-bar"><div class="mini-bar-fill" style="width:${bar}%;background:${color}"></div></div>
+          <span style="white-space:nowrap;font-size:0.78rem">${fmtN(d.Pop_Total)}</span>
+        </div>
+      </td>
+      <td>${fmtN(d.Occupied_Housing_Units)}</td>
+      <td style="color:var(--accent)">${d.Avg_Household_Size}</td>
+      <td style="color:var(--muted);font-size:0.78rem">${pct} p/unit</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+// ============ TABS ============
+function switchTab(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function setPopView(btn, view) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ============ DASH CHECKLIST ============
+let dashDone = 0, dashTotal = 16;
+function toggleCheck(li) {
+  li.classList.toggle('done');
+  dashDone = document.querySelectorAll('.checklist li.done').length;
+  document.getElementById('dash-progress-text').textContent = dashDone + '/' + dashTotal;
+  if (dashDone === dashTotal) document.getElementById('dash-complete-msg').style.display = 'block';
+  else document.getElementById('dash-complete-msg').style.display = 'none';
+}
+</script>
+</body>
+</html>
